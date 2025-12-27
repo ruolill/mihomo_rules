@@ -88,7 +88,6 @@ tun:
   auto-route: true
   auto-redirect: false
   auto-detect-interface: true
-  strict-route: true
 #-----------------------------------------------
 # DNS模块
 dns:
