@@ -1,2 +1,2 @@
 # mihomo_rules
-自用配置文件
+自用mihomo配置
