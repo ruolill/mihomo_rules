@@ -1,6 +1,6 @@
 #这里是订阅更新和延迟测试相关
 PProviders: &PProviders 
-  type: http
+  输入: http
   interval: 86400
   proxy: 订阅更新 #可以更改 proxy 指定的出站
   header: 
@@ -20,7 +20,7 @@ proxy-providers:
     path: ./proxy_providers/机场一.yaml
     override: {additional-suffix: '[机场一]'}
   
-    # override: {additional-prefix: '[]'}
+   # override: {additional-prefix: '[]'}
    # []内可为节点名称添加固定前缀
    
    # override: {additional-suffix: '[]'}
@@ -151,7 +151,6 @@ proxy-groups:
   - {name: 香港故转, <<: *BaseFB, proxies: [香港手动, 香港自动], icon: "https://gcore.jsdelivr.net/gh/Koolson/Qure@master//IconSet/mini/Hong_Kong.png"}  
   - {name: 香港手动, type: select, include-all: true, filter: *FilterHK, icon: "https://gcore.jsdelivr.net/gh/Koolson/Qure@master//IconSet/mini/Hong_Kong.png"}
   - {name: 香港自动, <<: *BaseUT, include-all: true, filter: *FilterHK, icon: "https://gcore.jsdelivr.net/gh/Koolson/Qure@master//IconSet/mini/Hong_Kong.png"}
-  
         
   - {name: 新加坡故转, <<: *BaseFB, proxies: [新加坡手动, 新加坡自动], icon: "https://gcore.jsdelivr.net/gh/Koolson/Qure@master//IconSet/mini/Singapore.png"}
   - {name: 新加坡手动, type: select, include-all: true, filter: *FilterSG, icon: "https://gcore.jsdelivr.net/gh/Koolson/Qure@master//IconSet/mini/Singapore.png"}
@@ -209,7 +208,8 @@ rule-providers:
   Fake-IP-Filter:
     <<: *domain
     url: "https://gcore.jsdelivr.net/gh/DustinWin/ruleset_geodata@mihomo-ruleset/fakeip-filter.mrs"  
-    path: ./rule_providers/Fake-IP-Filter.mrs                                        
+    path: ./rule_providers/Fake-IP-Filter.mrs     
+    
   google:
     <<: *domain
     url: "https://gcore.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta//geo/geosite/google.mrs"
