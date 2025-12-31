@@ -94,24 +94,18 @@ dns:
   enable: true
   ipv6: false
   cache-algorithm: arc
-  listen: "[::]:1053"
+  listen: 0.0.0.0:1053
   enhanced-mode: fake-ip
   fake-ip-range: 198.18.0.1/16
   fake-ip-range6: fc00::1/64
   fake-ip-filter:
     - "RULE-SET:Fake-IP-Filter"
-  proxy-server-nameserver:
-    - https://doh.pub/dns-query
-    - https://dns.alidns.com/dns-query
+  default-nameserver:
+    - 119.29.29.29
+    - 223.5.5.5
   nameserver:
-    - https://dns.alidns.com/dns-query
     - https://doh.pub/dns-query
-  nameserver-policy:
-    "RULE-SET:gfw":
-      - "https://dns.google/dns-query#代理"
-  direct-nameserver:
     - https://dns.alidns.com/dns-query
-    - https://doh.pub/dns-query
 #-----------------------------------------------
 # 锚点 - 地区筛选组
 FilterHK: &FilterHK '(?i)港|\bhk\b|🇭🇰|hongkong|hong kong'
