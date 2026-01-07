@@ -1,6 +1,6 @@
 #这里是订阅更新和延迟测试相关
 PProviders: &PProviders 
-  输入: http
+  type: http
   interval: 86400
   proxy: 订阅更新 #可以更改 proxy 指定的出站
   header: 
@@ -16,11 +16,17 @@ PProviders: &PProviders
 proxy-providers:   
   机场一:
     <<: *PProviders
-    url: "换成订阅链接"
+    url: "订阅链接"
     path: ./proxy_providers/机场一.yaml
-    override: {additional-suffix: '[机场一]'}
+    override: {additional-suffix: '[机场一]'} 
+    
+  机场二:
+    <<: *PProviders
+    url: "订阅链接"
+    path: ./proxy_providers/机场二.yaml
+    override: {additional-suffix: '[机场二]'}
   
-   # override: {additional-prefix: '[]'}
+    # override: {additional-prefix: '[]'}
    # []内可为节点名称添加固定前缀
    
    # override: {additional-suffix: '[]'}
@@ -92,20 +98,32 @@ tun:
 # DNS模块
 dns:
   enable: true
-  ipv6: false
-  cache-algorithm: arc
+  prefer-h3: false
   listen: 0.0.0.0:1053
+  ipv6: false
+  respect-rules: true
   enhanced-mode: fake-ip
   fake-ip-range: 198.18.0.1/16
-  fake-ip-range6: fc00::1/64
+  use-hosts: true
   fake-ip-filter:
     - "RULE-SET:Fake-IP-Filter"
   default-nameserver:
     - 119.29.29.29
-    - 223.5.5.5
-  nameserver:
+    - 223.6.6.6
+  direct-nameserver:
     - https://doh.pub/dns-query
     - https://dns.alidns.com/dns-query
+  direct-nameserver-follow-policy: true
+  proxy-server-nameserver:
+    - https://doh.pub/dns-query
+    - https://dns.alidns.com/dns-query
+  nameserver:
+    - https://dns.cloudflare.com/dns-query
+    - https://dns.google/dns-query
+  nameserver-policy:
+    "RULE-SET:cn,private":
+      - https://doh.pub/dns-query
+      - https://dns.alidns.com/dns-query
 #-----------------------------------------------
 # 锚点 - 地区筛选组
 FilterHK: &FilterHK '(?i)港|\bhk\b|🇭🇰|hongkong|hong kong'
@@ -117,11 +135,12 @@ FilterOther: &FilterOther '(?i)^(?!.*(?:🇭🇰|🇹🇼|🇯🇵|🇺🇸|🇸
 #示例：\bhk\b 匹配 "hk" 但不匹配 "hks"
 #-----------------------------------------------
 # 锚点 - 策略组基础配置
-BaseFB: &BaseFB {type: fallback, interval: 200, lazy: true, url: 'https://captive.apple.com'}
-BaseUT: &BaseUT {type: url-test, interval: 200, tolerance: 50, lazy: true, url: 'https://captive.apple.com', hidden: true}
+Select: &Select {type: select, include-all: true, interval: 200, lazy: false, url: 'https://captive.apple.com'}
+BaseFB: &BaseFB {type: fallback, interval: 60, lazy: false, url: 'https://captive.apple.com'}
+BaseUT: &BaseUT {type: url-test, include-all: true, interval: 200, tolerance: 50, lazy: false, url: 'https://captive.apple.com', hidden: true}
 #-----------------------------------------------
 #锚点 - 策略组代理列表
-SelectPy: &SelectPy {type: select, proxies: [香港故转, 新加坡故转, 日本故转, 美国故转, 其它地区, 全部节点, DIRECT]}
+SelectPy: &SelectPy {type: select, interval: 200, lazy: false, url: 'https://captive.apple.com', proxies: [香港故转, 新加坡故转, 日本故转, 美国故转, 其它地区, 全部节点, DIRECT]}
 SelectProxy: &SelectProxy {type: select,proxies: [代理, 香港故转, 新加坡故转, 日本故转, 美国故转, 其它地区, 全部节点, DIRECT]}
 #-----------------------------------------------
 # 代理策略组
@@ -138,24 +157,25 @@ proxy-groups:
   #---------------------------------------------
   #地区策略组                              
   - {name: 香港故转, <<: *BaseFB, proxies: [香港手动, 香港自动], icon: "https://gcore.jsdelivr.net/gh/Koolson/Qure@master//IconSet/mini/Hong_Kong.png"}  
-  - {name: 香港手动, type: select, include-all: true, filter: *FilterHK, icon: "https://gcore.jsdelivr.net/gh/Koolson/Qure@master//IconSet/mini/Hong_Kong.png"}
-  - {name: 香港自动, <<: *BaseUT, include-all: true, filter: *FilterHK, icon: "https://gcore.jsdelivr.net/gh/Koolson/Qure@master//IconSet/mini/Hong_Kong.png"}
+  - {name: 香港手动, <<: *Select, filter: *FilterHK, icon: "https://gcore.jsdelivr.net/gh/Koolson/Qure@master//IconSet/mini/Hong_Kong.png"}
+  - {name: 香港自动, <<: *BaseUT, filter: *FilterHK, icon: "https://gcore.jsdelivr.net/gh/Koolson/Qure@master//IconSet/mini/Hong_Kong.png"}
+  
         
   - {name: 新加坡故转, <<: *BaseFB, proxies: [新加坡手动, 新加坡自动], icon: "https://gcore.jsdelivr.net/gh/Koolson/Qure@master//IconSet/mini/Singapore.png"}
-  - {name: 新加坡手动, type: select, include-all: true, filter: *FilterSG, icon: "https://gcore.jsdelivr.net/gh/Koolson/Qure@master//IconSet/mini/Singapore.png"}
-  - {name: 新加坡自动, <<: *BaseUT, include-all: true, filter: *FilterSG, icon: "https://gcore.jsdelivr.net/gh/Koolson/Qure@master//IconSet/mini/Singapore.png"}
+  - {name: 新加坡手动, <<: *Select, filter: *FilterSG, icon: "https://gcore.jsdelivr.net/gh/Koolson/Qure@master//IconSet/mini/Singapore.png"}
+  - {name: 新加坡自动, <<: *BaseUT, filter: *FilterSG, icon: "https://gcore.jsdelivr.net/gh/Koolson/Qure@master//IconSet/mini/Singapore.png"}
     
   - {name: 日本故转, <<: *BaseFB, proxies: [日本手动, 日本自动], icon: "https://gcore.jsdelivr.net/gh/Koolson/Qure@master//IconSet/mini/Japan.png"}
-  - {name: 日本手动, type: select, include-all: true, filter: *FilterJP, icon: "https://gcore.jsdelivr.net/gh/Koolson/Qure@master//IconSet/mini/Japan.png"}
-  - {name: 日本自动, <<: *BaseUT, include-all: true, filter: *FilterJP, icon: "https://gcore.jsdelivr.net/gh/Koolson/Qure@master//IconSet/mini/Japan.png"}
+  - {name: 日本手动, <<: *Select, filter: *FilterJP, icon: "https://gcore.jsdelivr.net/gh/Koolson/Qure@master//IconSet/mini/Japan.png"}
+  - {name: 日本自动, <<: *BaseUT, filter: *FilterJP, icon: "https://gcore.jsdelivr.net/gh/Koolson/Qure@master//IconSet/mini/Japan.png"}
     
   - {name: 美国故转, <<: *BaseFB, proxies: [美国手动, 美国自动], icon: "https://gcore.jsdelivr.net/gh/Koolson/Qure@master//IconSet/mini/United_States.png"}
-  - {name: 美国手动, type: select, include-all: true, filter: *FilterUS, icon: "https://gcore.jsdelivr.net/gh/Koolson/Qure@master//IconSet/mini/United_States.png"}
-  - {name: 美国自动, <<: *BaseUT, include-all: true, filter: *FilterUS, icon: "https://gcore.jsdelivr.net/gh/Koolson/Qure@master//IconSet/mini/United_States.png"}
+  - {name: 美国手动, <<: *Select, filter: *FilterUS, icon: "https://gcore.jsdelivr.net/gh/Koolson/Qure@master//IconSet/mini/United_States.png"}
+  - {name: 美国自动, <<: *BaseUT, filter: *FilterUS, icon: "https://gcore.jsdelivr.net/gh/Koolson/Qure@master//IconSet/mini/United_States.png"}
   
-  - {name: 其它地区, type: select, include-all: true, filter: *FilterOther, icon: "https://gcore.jsdelivr.net/gh/Koolson/Qure@master//IconSet/mini/Area.png"} 
+  - {name: 其它地区, <<: *Select, filter: *FilterOther, icon: "https://gcore.jsdelivr.net/gh/Koolson/Qure@master//IconSet/mini/Area.png"} 
         
-  - {name: 全部节点, type: select, include-all: true, filter: '(?i)^(?!.*(?:DNS_Hijack)).*', icon: "https://gcore.jsdelivr.net/gh/Koolson/Qure@master//IconSet/mini/Global.png"}  
+  - {name: 全部节点, <<: *Select, filter: '(?i)^(?!.*(?:DNS_Hijack)).*', icon: "https://gcore.jsdelivr.net/gh/Koolson/Qure@master//IconSet/mini/Global.png"}  
   #---------------------------------------------
   # 其它策略组
   - {name: 订阅更新, type: select, proxies: [DIRECT, 代理], icon: "https://gcore.jsdelivr.net/gh/Koolson/Qure@master//IconSet/mini/Airport.png"}
@@ -197,8 +217,7 @@ rule-providers:
   Fake-IP-Filter:
     <<: *domain
     url: "https://gcore.jsdelivr.net/gh/DustinWin/ruleset_geodata@mihomo-ruleset/fakeip-filter.mrs"  
-    path: ./rule_providers/Fake-IP-Filter.mrs     
-    
+    path: ./rule_providers/Fake-IP-Filter.mrs                                        
   google:
     <<: *domain
     url: "https://gcore.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta//geo/geosite/google.mrs"
