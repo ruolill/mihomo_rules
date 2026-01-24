@@ -4,12 +4,12 @@ PProviders: &PProviders
   interval: 86400
   proxy: 订阅更新 #可以更改 proxy 指定的出站
   header: 
-    User-Agent: ["Clash.Meta/mihomo/Alpha/1.19.16"]
+    User-Agent: ["Clash.Meta/mihomo/Alpha/1.19.19/ClashforWindows/0.19.23"]
   health-check: 
     enable: true
     url: 'https://captive.apple.com'
-    interval: 300
-  filter: '(?i)^(?!.*(?:官网|群组|剩余|公益|发布|DIZTNA|通路|备用|登录|禁止|定时|渠道|更新|过期|牢记|永久|到期|进群|余额|关注|阁下|本站|无法|刷新|导航|⚠️|@|Traffic|Expire|http|https|com|\bg\b)).*'
+    interval: 200
+  filter: '(?i)^(?!.*(?:官网|网址|选择|群组|剩余|公益|发布|DIZTNA|通路|备用|登录|禁止|定时|渠道|更新|过期|牢记|永久|到期|进群|余额|关注|阁下|本站|无法|刷新|导航|⚠️|@|5x|Expire|http|https|com|\bg\b)).*'
 #----------------------------------------------
 #引用远程订阅链接或者本地文件
 # url里填写自己的订阅,名称不能重复
@@ -41,19 +41,17 @@ redir-port: 9797
 tproxy-port: 9898
 mode: rule           # 运行模式
 bind-address: '*'
-ipv6: false           # IPv6总开关
+ipv6: true          # IPv6总开关
 allow-lan: true       # 允许局域网
-unified-delay: false  # 统一延迟
+unified-delay: true  # 统一延迟
 tcp-concurrent: true # TCP并发
 log-level: error      # 日志等级 silent/error/warning/info/debug
 find-process-mode: strict
 #  - always, 开启，强制匹配所有进程
 #  - strict, 默认，由 mihomo 判断是否开启
 #  - off, 不匹配进程，推荐在路由器上使用此模式
-#keep-alive-interval: 1800 
-keep-alive-idle: 300
-keep-alive-interval: 75
-global-client-fingerprint: chrome
+keep-alive-interval: 1800 
+
 #-----------------------------------------------
 # 管理面板配置
 external-controller: 0.0.0.0:9090
@@ -100,13 +98,17 @@ dns:
   enable: true
   prefer-h3: false
   listen: 0.0.0.0:1053
-  ipv6: false
+  ipv6: true
   respect-rules: true
+  cache-algorithm: arc
   enhanced-mode: fake-ip
   fake-ip-range: 198.18.0.1/16
+  fake-ip-range6: fdfe:dcba:9876::1/64
+  fake-ip-filter-mode: rule
   use-hosts: true
   fake-ip-filter:
-    - "RULE-SET:Fake-IP-Filter"
+    - RULE-SET,Fake-IP-Filter,real-ip
+    - RULE-SET,cn,real-ip
   default-nameserver:
     - 119.29.29.29
     - 223.6.6.6
@@ -118,67 +120,77 @@ dns:
     - https://doh.pub/dns-query
     - https://dns.alidns.com/dns-query
   nameserver:
-    - https://dns.cloudflare.com/dns-query
     - https://dns.google/dns-query
+    - https://dns.cloudflare.com/dns-query   
   nameserver-policy:
     "RULE-SET:cn,private":
       - https://doh.pub/dns-query
       - https://dns.alidns.com/dns-query
 #-----------------------------------------------
 # 锚点 - 地区筛选组
-FilterHK: &FilterHK '(?i)港|\bhk\b|🇭🇰|hongkong|hong kong'
+FilterHK: &FilterHK '(?i)^(?!.*(?:\bus\b)).*(港|\bhk\b|🇭🇰|hongkong|hong kong)'
+
 FilterSG: &FilterSG '(?i)^(?!.*(?:\bus\b)).*(新加坡|狮城|\bsg\b|🇸🇬|singapore)'
+
 FilterJP: &FilterJP '(?i)日本|\bjp\b|🇯🇵|japan'
-FilterUS: &FilterUS '(?i)美|\bus\b|🇺🇸|unitedstates|united states'   
+
+FilterUS: &FilterUS '(?i)^(?!.*(?:\byt-us\b|\bhk\b)).*(美|\bus\b|🇺🇸|unitedstates|united states)'  
+ 
 FilterOther: &FilterOther '(?i)^(?!.*(?:🇭🇰|🇹🇼|🇯🇵|🇺🇸|🇸🇬|🇨🇳|港|台|日|美|新|\bhk\b|\btw\b|\bjp\b|\bus\b|\bsg\b|hongkong|taiwan|japan|unitedstates|united states|singapore|\bg\b|欠费|DNS_Hijack)).*' 
+
 # \b 用来匹配“单词的开头或结尾”
 #示例：\bhk\b 匹配 "hk" 但不匹配 "hks"
 #-----------------------------------------------
 # 锚点 - 策略组基础配置
-Select: &Select {type: select, include-all: true, interval: 200, lazy: false, url: 'https://captive.apple.com'}
-BaseFB: &BaseFB {type: fallback, interval: 60, lazy: false, url: 'https://captive.apple.com'}
-BaseUT: &BaseUT {type: url-test, include-all: true, interval: 200, tolerance: 50, lazy: false, url: 'https://captive.apple.com', hidden: true}
+# hidden: true 为隐藏策略组
+Select: &Select {type: select, include-all: true, interval: 200, lazy: true, url: 'https://captive.apple.com'}
+
+BaseFB: &BaseFB {type: fallback, interval: 60, lazy: true, url: 'https://captive.apple.com'}
+
+BaseUT: &BaseUT {type: url-test, include-all: true, interval: 200, tolerance: 50, lazy: true, url: 'https://captive.apple.com', hidden: true}
 #-----------------------------------------------
 #锚点 - 策略组代理列表
 SelectPy: &SelectPy {type: select, interval: 200, lazy: false, url: 'https://captive.apple.com', proxies: [香港故转, 新加坡故转, 日本故转, 美国故转, 其它地区, 全部节点, DIRECT]}
+
 SelectProxy: &SelectProxy {type: select,proxies: [代理, 香港故转, 新加坡故转, 日本故转, 美国故转, 其它地区, 全部节点, DIRECT]}
 #-----------------------------------------------
 # 代理策略组
 proxy-groups:
   #---------------------------------------------
   # 主要策略组
-  - {name: 代理, <<: *SelectPy, icon: "https://gcore.jsdelivr.net/gh/Koolson/Qure@master/IconSet/mini/Proxy.png"}
+  - {name: 代理, <<: *SelectPy, icon: "https://v6.gh-proxy.org/https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/mini/Proxy.png"}
     
-  - {name: Telegram, <<: *SelectProxy, icon: "https://gcore.jsdelivr.net/gh/Koolson/Qure@master/IconSet/mini/Telegram.png"}
+  - {name: Telegram, <<: *SelectProxy, icon: "https://v6.gh-proxy.org/https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/mini/Telegram.png"}
     
-  - {name: Google, <<: *SelectProxy, icon: "https://gcore.jsdelivr.net/gh/Koolson/Qure@master//IconSet/mini/Google.png"}
+  - {name: Google, <<: *SelectProxy, icon: "https://v6.gh-proxy.org/https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/mini/Google.png"}
     
-  - {name: Ai平台, <<: *SelectProxy, icon: "https://gcore.jsdelivr.net/gh/Koolson/Qure@master//IconSet/mini/Qure.png"}
+  - {name: Ai平台, <<: *SelectProxy, icon: "https://v6.gh-proxy.org/https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/mini/Qure.png"}
   #---------------------------------------------
   #地区策略组                              
-  - {name: 香港故转, <<: *BaseFB, proxies: [香港手动, 香港自动], icon: "https://gcore.jsdelivr.net/gh/Koolson/Qure@master//IconSet/mini/Hong_Kong.png"}  
-  - {name: 香港手动, <<: *Select, filter: *FilterHK, icon: "https://gcore.jsdelivr.net/gh/Koolson/Qure@master//IconSet/mini/Hong_Kong.png"}
-  - {name: 香港自动, <<: *BaseUT, filter: *FilterHK, icon: "https://gcore.jsdelivr.net/gh/Koolson/Qure@master//IconSet/mini/Hong_Kong.png"}
+  - {name: 香港故转, <<: *BaseFB, proxies: [香港手动, 香港自动], icon: "https://v6.gh-proxy.org/https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/mini/Hong_Kong.png"}  
+  
+  - {name: 香港手动, <<: *Select, filter: *FilterHK, icon: "https://v6.gh-proxy.org/https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/mini/Hong_Kong.png"}
+  - {name: 香港自动, <<: *BaseUT, filter: *FilterHK, icon: "https://v6.gh-proxy.org/https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/mini/Hong_Kong.png"}
   
         
-  - {name: 新加坡故转, <<: *BaseFB, proxies: [新加坡手动, 新加坡自动], icon: "https://gcore.jsdelivr.net/gh/Koolson/Qure@master//IconSet/mini/Singapore.png"}
-  - {name: 新加坡手动, <<: *Select, filter: *FilterSG, icon: "https://gcore.jsdelivr.net/gh/Koolson/Qure@master//IconSet/mini/Singapore.png"}
-  - {name: 新加坡自动, <<: *BaseUT, filter: *FilterSG, icon: "https://gcore.jsdelivr.net/gh/Koolson/Qure@master//IconSet/mini/Singapore.png"}
+  - {name: 新加坡故转, <<: *BaseFB, proxies: [新加坡手动, 新加坡自动], icon: "https://v6.gh-proxy.org/https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/mini/Singapore.png"}
+  - {name: 新加坡手动, <<: *Select, filter: *FilterSG, icon: "https://v6.gh-proxy.org/https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/mini/Singapore.png"}
+  - {name: 新加坡自动, <<: *BaseUT, filter: *FilterSG, icon: "https://v6.gh-proxy.org/https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/mini/Singapore.png"}
     
-  - {name: 日本故转, <<: *BaseFB, proxies: [日本手动, 日本自动], icon: "https://gcore.jsdelivr.net/gh/Koolson/Qure@master//IconSet/mini/Japan.png"}
-  - {name: 日本手动, <<: *Select, filter: *FilterJP, icon: "https://gcore.jsdelivr.net/gh/Koolson/Qure@master//IconSet/mini/Japan.png"}
-  - {name: 日本自动, <<: *BaseUT, filter: *FilterJP, icon: "https://gcore.jsdelivr.net/gh/Koolson/Qure@master//IconSet/mini/Japan.png"}
+  - {name: 日本故转, <<: *BaseFB, proxies: [日本手动, 日本自动], icon: "https://v6.gh-proxy.org/https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/mini/Japan.png"}
+  - {name: 日本手动, <<: *Select, filter: *FilterJP, icon: "https://v6.gh-proxy.org/https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/mini/Japan.png"}
+  - {name: 日本自动, <<: *BaseUT, filter: *FilterJP, icon: "https://v6.gh-proxy.org/https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/mini/Japan.png"}
     
-  - {name: 美国故转, <<: *BaseFB, proxies: [美国手动, 美国自动], icon: "https://gcore.jsdelivr.net/gh/Koolson/Qure@master//IconSet/mini/United_States.png"}
-  - {name: 美国手动, <<: *Select, filter: *FilterUS, icon: "https://gcore.jsdelivr.net/gh/Koolson/Qure@master//IconSet/mini/United_States.png"}
-  - {name: 美国自动, <<: *BaseUT, filter: *FilterUS, icon: "https://gcore.jsdelivr.net/gh/Koolson/Qure@master//IconSet/mini/United_States.png"}
+  - {name: 美国故转, <<: *BaseFB, proxies: [美国手动, 美国自动], icon: "https://v6.gh-proxy.org/https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/mini/United_States.png"}
+  - {name: 美国手动, <<: *Select, filter: *FilterUS, icon: "https://v6.gh-proxy.org/https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/mini/United_States.png"}
+  - {name: 美国自动, <<: *BaseUT, filter: *FilterUS, icon: "https://v6.gh-proxy.org/https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/mini/United_States.png"}
   
-  - {name: 其它地区, <<: *Select, filter: *FilterOther, icon: "https://gcore.jsdelivr.net/gh/Koolson/Qure@master//IconSet/mini/Area.png"} 
+  - {name: 其它地区, <<: *Select, filter: *FilterOther, icon: "https://v6.gh-proxy.org/https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/mini/Area.png"} 
         
-  - {name: 全部节点, <<: *Select, filter: '(?i)^(?!.*(?:DNS_Hijack)).*', icon: "https://gcore.jsdelivr.net/gh/Koolson/Qure@master//IconSet/mini/Global.png"}  
+  - {name: 全部节点, <<: *Select, filter: '(?i)^(?!.*(?:DNS_Hijack|欠费)).*', icon: "https://v6.gh-proxy.org/https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/mini/Global.png"}  
   #---------------------------------------------
-  # 其它策略组
-  - {name: 订阅更新, type: select, proxies: [DIRECT, 代理], icon: "https://gcore.jsdelivr.net/gh/Koolson/Qure@master//IconSet/mini/Airport.png"}
+  # 其它策略组  
+  - {name: 订阅更新, type: select, proxies: [DIRECT, 代理], icon: "https://v6.gh-proxy.org/https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/mini/Airport.png"}
 #-----------------------------------------------
 # 路由规则
 rules:
@@ -208,49 +220,49 @@ rule-anchor:
   domain: &domain {type: http, interval: 86400, behavior: domain, format: mrs}
 #-----------------------------------------------
 # 规则提供者
-rule-providers:  
+rule-providers:      
   Ai:  
     <<: *domain
-    url: "https://gcore.jsdelivr.net/gh/DustinWin/ruleset_geodata@mihomo-ruleset/ai.mrs"
+    url: "https://v6.gh-proxy.com/https://github.com/DustinWin/ruleset_geodata/raw/refs/heads/mihomo-ruleset/ai.mrs"
     path: ./rule_providers/Ai.mrs       
                        
   Fake-IP-Filter:
     <<: *domain
-    url: "https://gcore.jsdelivr.net/gh/DustinWin/ruleset_geodata@mihomo-ruleset/fakeip-filter.mrs"  
+    url: "https://v6.gh-proxy.org/https://github.com/DustinWin/ruleset_geodata/raw/refs/heads/mihomo-ruleset/fakeip-filter.mrs"  
     path: ./rule_providers/Fake-IP-Filter.mrs                                        
   google:
     <<: *domain
-    url: "https://gcore.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta//geo/geosite/google.mrs"
+    url: "https://v6.gh-proxy.org//https://github.com/MetaCubeX/meta-rules-dat/raw/refs/heads/meta/geo/geosite/google.mrs"
     path: ./rule_providers/google.mrs
     
   google_ip:
     <<: *ip
-    url: "https://gcore.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geoip/google.mrs"
+    url: "https://v6.gh-proxy.org//https://github.com/MetaCubeX/meta-rules-dat/raw/refs/heads/meta/geo/geoip/google.mrs"
     path: ./rule_providers/google_ip.mrs
   
   telegram:
     <<: *domain
-    url: "https://gcore.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/telegram.mrs"
+    url: "https://v6.gh-proxy.org//https://github.com/MetaCubeX/meta-rules-dat/raw/refs/heads/meta/geo/geosite/telegram.mrs"
     path: ./rule_providers/telegram.mrs  
         
   telegram_ip:
     <<: *ip
-    url: "https://gcore.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geoip/telegram.mrs"
+    url: "https://v6.gh-proxy.org//https://github.com/MetaCubeX/meta-rules-dat/raw/refs/heads/meta/geo/geoip/telegram.mrs"
     path: ./rule_providers/telegram_ip.mrs 
   
   private:
     <<: *domain
-    url: "https://gcore.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/private.mrs"
+    url: "https://v6.gh-proxy.org//https://github.com/MetaCubeX/meta-rules-dat/raw/refs/heads/meta/geo/geosite/private.mrs"
     path: ./rule_providers/private.mrs
   
   private_ip:
     <<: *ip
-    url: "https://gcore.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geoip/private.mrs"  
+    url: "https://v6.gh-proxy.org//https://github.com/MetaCubeX/meta-rules-dat/raw/refs/heads/meta/geo/geoip/private.mrs"  
     path: ./rule_providers/private_ip.mrs
  
   gfw:
     <<: *domain
-    url: "https://gcore.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/gfw.mrs"
+    url: "https://v6.gh-proxy.org//https://github.com/MetaCubeX/meta-rules-dat/raw/refs/heads/meta/geo/geosite/gfw.mrs"
     path: ./rule_providers/gfw.mrs
  
   cn:
@@ -260,5 +272,5 @@ rule-providers:
             
   cn_ip:
     <<: *ip
-    url: "https://gcore.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geoip/cn.mrs"
+    url: "https://v6.gh-proxy.org//https://github.com/MetaCubeX/meta-rules-dat/raw/refs/heads/meta/geo/geoip/cn.mrs"
     path: ./rule_providers/cn_ip.mrs
