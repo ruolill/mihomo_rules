@@ -4,7 +4,7 @@ PProviders: &PProviders
   interval: 86400
   proxy: 订阅更新 #可以更改 proxy 指定的出站
   header: 
-    User-Agent: ["Clash.Meta/mihomo/Alpha/1.19.19/ClashforWindows/0.19.23"]
+    User-Agent: ["Clash.Meta/mihomo/Alpha/1.19.18/ClashforWindows/0.19.23"]
   health-check: 
     enable: true
     url: 'https://captive.apple.com'
@@ -143,71 +143,149 @@ FilterOther: &FilterOther '(?i)^(?!.*(?:🇭🇰|🇹🇼|🇯🇵|🇺🇸|🇸
 #-----------------------------------------------
 # 锚点 - 策略组基础配置
 # hidden: true 为隐藏策略组
-Select: &Select {type: select, include-all: true, interval: 200, lazy: true, url: 'https://captive.apple.com'}
+Select: &Select 
+  type: select
+  include-all: true
+  interval: 200
+  url: 'https://captive.apple.com'
 
-BaseFB: &BaseFB {type: fallback, interval: 60, lazy: true, url: 'https://captive.apple.com'}
+BaseFB: &BaseFB 
+  type: fallback
+  interval: 60
+  url: 'https://captive.apple.com'
 
-BaseUT: &BaseUT {type: url-test, include-all: true, interval: 200, tolerance: 50, lazy: true, url: 'https://captive.apple.com', hidden: true}
+BaseUT: &BaseUT 
+  type: url-test
+  include-all: true
+  interval: 200
+  tolerance: 50
+  url: 'https://captive.apple.com'
+  hidden: true
 #-----------------------------------------------
 #锚点 - 策略组代理列表
-SelectPy: &SelectPy {type: select, interval: 200, lazy: false, url: 'https://captive.apple.com', proxies: [香港故转, 新加坡故转, 日本故转, 美国故转, 其它地区, 全部节点, DIRECT]}
+SelectPy: &SelectPy 
+  type: select
+  interval: 200
+  lazy: false
+  url: 'https://captive.apple.com'
+  proxies: [香港故转, 新加坡故转, 日本故转, 美国故转, 其它地区, 全部节点, DIRECT]
 
-SelectProxy: &SelectProxy {type: select,proxies: [代理, 香港故转, 新加坡故转, 日本故转, 美国故转, 其它地区, 全部节点, DIRECT]}
+SelectProxy: &SelectProxy 
+  type: select
+  proxies: [代理, 香港故转, 新加坡故转, 日本故转, 美国故转, 其它地区, 全部节点, DIRECT]
 #-----------------------------------------------
 # 代理策略组
 proxy-groups:
   #---------------------------------------------
   # 主要策略组
-  - {name: 代理, <<: *SelectPy, icon: "https://v6.gh-proxy.org/https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/mini/Proxy.png"}
+  - name: 代理
+    <<: *SelectPy
+    icon: "https://v6.gh-proxy.org/https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/mini/Proxy.png"
+  #---------------------------------------------
+  # 应用分流策略组  
+  - name: Telegram
+    <<: *SelectProxy
+    icon: "https://v6.gh-proxy.org/https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/mini/Telegram.png"
     
-  - {name: Telegram, <<: *SelectProxy, icon: "https://v6.gh-proxy.org/https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/mini/Telegram.png"}
+  - name: Google
+    <<: *SelectProxy
+    icon: "https://v6.gh-proxy.org/https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/mini/Google.png"
     
-  - {name: Google, <<: *SelectProxy, icon: "https://v6.gh-proxy.org/https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/mini/Google.png"}
-    
-  - {name: Ai平台, <<: *SelectProxy, icon: "https://v6.gh-proxy.org/https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/mini/Qure.png"}
+  - name: Ai平台
+    <<: *SelectProxy
+    icon: "https://v6.gh-proxy.org/https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/mini/Qure.png"
   #---------------------------------------------
   #地区策略组                              
-  - {name: 香港故转, <<: *BaseFB, proxies: [香港手动, 香港自动], icon: "https://v6.gh-proxy.org/https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/mini/Hong_Kong.png"}  
+  - name: 香港故转
+    <<: *BaseFB
+    proxies: [香港手动, 香港自动]
+    icon: "https://v6.gh-proxy.org/https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/mini/Hong_Kong.png"
+  - name: 香港手动
+    <<: *Select
+    filter: *FilterHK
+    icon: "https://v6.gh-proxy.org/https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/mini/Hong_Kong.png"
+  - name: 香港自动
+    <<: *BaseUT
+    filter: *FilterHK
+    icon: "https://v6.gh-proxy.org/https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/mini/Hong_Kong.png"
   
-  - {name: 香港手动, <<: *Select, filter: *FilterHK, icon: "https://v6.gh-proxy.org/https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/mini/Hong_Kong.png"}
-  - {name: 香港自动, <<: *BaseUT, filter: *FilterHK, icon: "https://v6.gh-proxy.org/https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/mini/Hong_Kong.png"}
-  
-        
-  - {name: 新加坡故转, <<: *BaseFB, proxies: [新加坡手动, 新加坡自动], icon: "https://v6.gh-proxy.org/https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/mini/Singapore.png"}
-  - {name: 新加坡手动, <<: *Select, filter: *FilterSG, icon: "https://v6.gh-proxy.org/https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/mini/Singapore.png"}
-  - {name: 新加坡自动, <<: *BaseUT, filter: *FilterSG, icon: "https://v6.gh-proxy.org/https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/mini/Singapore.png"}
+  - name: 新加坡故转
+    <<: *BaseFB
+    proxies: [新加坡手动, 新加坡自动]
+    icon: "https://v6.gh-proxy.org/https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/mini/Singapore.png"
+  - name: 新加坡手动
+    <<: *Select
+    filter: *FilterSG
+    icon: "https://v6.gh-proxy.org/https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/mini/Singapore.png"
+  - name: 新加坡自动
+    <<: *BaseUT
+    filter: *FilterSG
+    icon: "https://v6.gh-proxy.org/https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/mini/Singapore.png"
     
-  - {name: 日本故转, <<: *BaseFB, proxies: [日本手动, 日本自动], icon: "https://v6.gh-proxy.org/https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/mini/Japan.png"}
-  - {name: 日本手动, <<: *Select, filter: *FilterJP, icon: "https://v6.gh-proxy.org/https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/mini/Japan.png"}
-  - {name: 日本自动, <<: *BaseUT, filter: *FilterJP, icon: "https://v6.gh-proxy.org/https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/mini/Japan.png"}
+  - name: 日本故转
+    <<: *BaseFB
+    proxies: [日本手动, 日本自动]
+    icon: "https://v6.gh-proxy.org/https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/mini/Japan.png"
+  - name: 日本手动
+    <<: *Select
+    filter: *FilterJP
+    icon: "https://v6.gh-proxy.org/https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/mini/Japan.png"
+  - name: 日本自动
+    <<: *BaseUT
+    filter: *FilterJP
+    icon: "https://v6.gh-proxy.org/https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/mini/Japan.png"
     
-  - {name: 美国故转, <<: *BaseFB, proxies: [美国手动, 美国自动], icon: "https://v6.gh-proxy.org/https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/mini/United_States.png"}
-  - {name: 美国手动, <<: *Select, filter: *FilterUS, icon: "https://v6.gh-proxy.org/https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/mini/United_States.png"}
-  - {name: 美国自动, <<: *BaseUT, filter: *FilterUS, icon: "https://v6.gh-proxy.org/https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/mini/United_States.png"}
+  - name: 美国故转
+    <<: *BaseFB
+    proxies: [美国手动, 美国自动]
+    icon: "https://v6.gh-proxy.org/https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/mini/United_States.png"
+  - name: 美国手动
+    <<: *Select
+    filter: *FilterUS
+    icon: "https://v6.gh-proxy.org/https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/mini/United_States.png"
+  - name: 美国自动
+    <<: *BaseUT
+    filter: *FilterUS
+    icon: "https://v6.gh-proxy.org/https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/mini/United_States.png"
   
-  - {name: 其它地区, <<: *Select, filter: *FilterOther, icon: "https://v6.gh-proxy.org/https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/mini/Area.png"} 
+  - name: 其它地区
+    <<: *Select
+    filter: *FilterOther
+    icon: "https://v6.gh-proxy.org/https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/mini/Area.png"
         
-  - {name: 全部节点, <<: *Select, filter: '(?i)^(?!.*(?:DNS_Hijack|欠费)).*', icon: "https://v6.gh-proxy.org/https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/mini/Global.png"}  
+  - name: 全部节点
+    <<: *Select
+    filter: '(?i)^(?!.*(?:DNS_Hijack|欠费)).*'
+    icon: "https://v6.gh-proxy.org/https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/mini/Global.png"
   #---------------------------------------------
   # 其它策略组  
-  - {name: 订阅更新, type: select, proxies: [DIRECT, 代理], icon: "https://v6.gh-proxy.org/https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/mini/Airport.png"}
+  - name: 订阅更新
+    type: select
+    proxies: [DIRECT, 代理]
+    icon: "https://v6.gh-proxy.org/https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/mini/Airport.png"
 #-----------------------------------------------
 # 路由规则
 rules:
   - IP-CIDR,95.161.76.100/31,REJECT-DROP,no-resolve
   - DST-PORT,53,DNS_Hijack
-  
+  #---------------------------------------------
+  #本地网络规则
   - RULE-SET,private,DIRECT
   - RULE-SET,private_ip,DIRECT,no-resolve 
+  #---------------------------------------------
+  #应用分流规则
   - RULE-SET,Ai,Ai平台
   - RULE-SET,telegram,Telegram 
   - RULE-SET,telegram_ip,Telegram  
   - RULE-SET,google,Google     
   - RULE-SET,google_ip,Google 
   - RULE-SET,gfw,代理 
+   #---------------------------------------------
+  #中国大陆规则
+  - DOMAIN-KEYWORD,v6.gh-proxy,DIRECT
   - RULE-SET,cn,DIRECT
   - RULE-SET,cn_ip,DIRECT
-  
+  #---------------------------------------------
   # 兜底规则 - 未匹配流量
   - MATCH,代理
 #-----------------------------------------------
