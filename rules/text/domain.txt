@@ -1,4 +1,4 @@
-payload:
+
   - DOMAIN-SUFFIX,amazing910.top
   - DOMAIN,link00.okemby.org
   - DOMAIN-SUFFIX,emos.best
@@ -56,4 +56,3 @@ payload:
   - IP-CIDR,155.53.133.214/32,no-resolve
   - PROCESS-PATH,com.hush.yamby
   - PROCESS-PATH,com.mountains.hills
-
